@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AudioEQ</string>
+    <string-array name="profiles">
+        <item>Bass Boost</item>
+        <item>Flat</item>
+        <item>Treble Boost</item>
+    </string-array>
+    <string name="dropdown_name">Profiles</string>
 </resources>

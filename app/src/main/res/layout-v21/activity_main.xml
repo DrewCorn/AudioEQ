@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <Button
         android:id="@+id/addProfile"
         android:layout_width="wrap_content"
@@ -15,11 +16,13 @@
         android:layout_marginBottom="438dp"
         android:text="Add Profile" />
 
+    <!--dropdown-->
     <Spinner
         android:id="@+id/spinner1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/profiles" />
+        android:entries="@array/profiles"
+        android:prompt="@string/dropdown_name" />
 
     <!--<android.support.v7.widget.DropDownListView-->
         <!--android:layout_width="250dp"-->
