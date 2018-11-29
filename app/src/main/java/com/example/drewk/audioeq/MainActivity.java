@@ -1,5 +1,8 @@
 package com.example.drewk.audioeq;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -7,25 +10,41 @@ import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.TransactionTooLargeException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
 
+    List<Profile> profiles;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Realm.init(MainActivity.this);
+        RealmResults<Profile> profileRealm = Realm.getDefaultInstance().where(Profile.class).findAll();
+        profiles = Realm.getDefaultInstance().copyFromRealm(profileRealm);
+        ProfileAdapter adapter = new ProfileAdapter(profiles, MainActivity.this);
         Intent intent = new Intent(this, AudioService.class);
         startService(intent);
 
@@ -49,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
 //            dropdown.setOnItemSelectedListener(new DropdownOnItemSelectedListener());
 //
 //        }
-
 
 
         /**
@@ -100,42 +118,123 @@ public class MainActivity extends AppCompatActivity {
                 eq.setBandLevel((short) 4, (short) (minFreq + progress));
             }
         });
+        Spinner dropdown = (Spinner) findViewById(R.id.spinner1);
+
         Button addProfile = findViewById(R.id.addProfile);
         addProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "Profile Added", Toast.LENGTH_SHORT).show();
+                LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_layout, null);
+                View popupLayout = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_layout, null);
+
+                AlertDialog.Builder popup = new AlertDialog.Builder(MainActivity.this);
+                popup.setTitle("Add Profile");
+                popup.setView(popupLayout);
+
+                EditText textbox = popupLayout.findViewById(R.id.textBox);
+                popup.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String name = textbox.getText().toString();
+                        Profile newProfile = new Profile(name, seekbar1.getProgress(), seekbar2.getProgress(),
+                                seekbar3.getProgress(), seekbar4.getProgress(), seekbar5.getProgress());
+                        Realm.getDefaultInstance().executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm Realm) {
+                                Realm.copyToRealm(newProfile);
+
+                            }
+                        });
+                        List<Profile> temp = Realm.getDefaultInstance().where(Profile.class).findAll();
+                        adapter.setData(temp);
+                        dropdown.setSelection(temp.size() - 1);
+
+                        Toast.makeText(MainActivity.this, "Profile Added", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                });
+                popup.show();
             }
-            });
+        });
+
+        Button deleteProfile = findViewById(R.id.deleteProfile);
+        deleteProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                AlertDialog.Builder popup = new AlertDialog.Builder(MainActivity.this);
+                popup.setTitle("Delete Profile");
+                popup.setMessage("aRe YoU sUrE?");
+
+                popup.setPositiveButton("Do it.", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+//                        profiles.remove(dropdown.getSelectedItemPosition());
+//                        RealmResults<Profile> profileRealm = Realm.getDefaultInstance().where(Profile.class).findAll();
+                        Realm.getDefaultInstance().executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm Realm) {
+//                                profileRealm.deleteAllFromRealm();
+//                                Realm.delete(profiles.get(dropdown.getSelectedItemPosition()));
+//                                Realm.copyToRealm(profiles);
+                                profileRealm.deleteFromRealm(dropdown.getSelectedItemPosition());
+                            }
+                        });
+                        List<Profile> temp = Realm.getDefaultInstance().where(Profile.class).findAll();
+                        adapter.setData(temp);
+                        dropdown.setSelection(1);
+
+                        Toast.makeText(MainActivity.this, "Profile Yeeted", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                });
+                popup.setNegativeButton("Wait no", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                popup.show();
+            }
+        });
 
         /**
          * creating the spinner and listener
          */
 
-        Spinner dropdown = (Spinner) findViewById(R.id.spinner1);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.profiles, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        if (profiles.size() == 0) {
+            Profile bassBoost = new Profile("Bass Boost", seekbar1.getMax() / 4 * 3, seekbar2.getMax() / 5 * 3,
+                    seekbar3.getMax() / 2, seekbar3.getMax() / 2, seekbar3.getMax() / 2);
+            Profile flat = new Profile("Flat", seekbar1.getProgress(), seekbar2.getProgress(),
+                    seekbar3.getProgress(), seekbar4.getProgress(), seekbar5.getProgress());
+            Profile trebleBoost = new Profile("Treble Boost", seekbar1.getProgress(), seekbar2.getProgress(),
+                    seekbar3.getProgress(), seekbar3.getMax() / 5 * 3, seekbar5.getMax() / 4 * 3);
+            Realm.getDefaultInstance().executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm Realm) {
+                    Realm.copyToRealm(bassBoost);
+                    Realm.copyToRealm(flat);
+                    Realm.copyToRealm(trebleBoost);
+                }
+            });
+            profiles = Realm.getDefaultInstance().where(Profile.class).findAll();
+            adapter.setData(profiles);
+        }
+
         dropdown.setAdapter(adapter);
         dropdown.setSelection(1);
         dropdown.setOnItemSelectedListener(new DropdownOnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> arg0,  View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        seekbar1.setProgress((seekbar1.getMax() / 4) * 3);
-                        seekbar2.setProgress((seekbar2.getMax() / 5) * 3);
-                        break;
-                    case 1:
-                        seekbar1.setProgress(seekbar1.getMax() / 2);
-                        seekbar2.setProgress(seekbar2.getMax() / 2);
-                        seekbar3.setProgress(seekbar3.getMax() / 2);
-                        seekbar4.setProgress(seekbar4.getMax() / 2);
-                        seekbar5.setProgress(seekbar5.getMax() / 2);
-                        break;
-                    case 2:
-                        seekbar4.setProgress((seekbar3.getMax() / 5) * 3);
-                        seekbar5.setProgress((seekbar5.getMax() / 4) * 3);
-                }
+            public void onItemSelected(AdapterView<?> arg0, View view, int position, long id) {
+                List<Profile> tempList = Realm.getDefaultInstance().where(Profile.class).findAll();
+                Profile temp = tempList.get(position);
+                seekbar1.setProgress((int) temp.getProgress1());
+                seekbar2.setProgress((int) temp.getProgress2());
+                seekbar3.setProgress((int) temp.getProgress3());
+                seekbar4.setProgress((int) temp.getProgress4());
+                seekbar5.setProgress((int) temp.getProgress5());
+
+
             }
         });
 

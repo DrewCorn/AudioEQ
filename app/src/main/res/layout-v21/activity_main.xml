@@ -16,6 +16,16 @@
         android:layout_marginBottom="438dp"
         android:text="Add Profile" />
 
+    <Button
+        android:id="@+id/deleteProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="0dp"
+        android:layout_marginBottom="438dp"
+        android:text="delete Profile" />
+
     <!--dropdown-->
     <Spinner
         android:id="@+id/spinner1"
