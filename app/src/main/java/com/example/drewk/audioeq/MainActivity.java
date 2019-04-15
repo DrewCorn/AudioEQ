@@ -1,19 +1,12 @@
 package com.example.drewk.audioeq;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.media.audiofx.BassBoost;
 import android.media.audiofx.Equalizer;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.TransactionTooLargeException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +18,6 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.List;
 
 import io.realm.Realm;
@@ -35,9 +27,9 @@ public class MainActivity extends AppCompatActivity {
 
     List<Profile> profiles;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -45,16 +37,12 @@ public class MainActivity extends AppCompatActivity {
         RealmResults<Profile> profileRealm = Realm.getDefaultInstance().where(Profile.class).findAll();
         profiles = Realm.getDefaultInstance().copyFromRealm(profileRealm);
         ProfileAdapter adapter = new ProfileAdapter(profiles, MainActivity.this);
+
+
         Intent intent = new Intent(this, AudioService.class);
         startService(intent);
 
         MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.song);
-//        MediaPlayer mp = new MediaPlayer();
-//        try {
-//            mp.setDataSource(Environment.getExternalStorageDirectory().getAbsolutePath() + "\\Music\\ThatsLife");
-//        } catch (IOException e) {
-//            System.out.println("yeet");
-//        }
 
         Equalizer eq = new Equalizer(0, mp.getAudioSessionId());
         eq.setEnabled(true);
@@ -62,12 +50,6 @@ public class MainActivity extends AppCompatActivity {
         mp.start();
         short minFreq = eq.getBandLevelRange()[0];
         short maxFreq = eq.getBandLevelRange()[1];
-
-//        public void addListenerOnSpinnerItemSelection() {
-//            Spinner dropdown = findViewById(R.id.spinner1);
-//            dropdown.setOnItemSelectedListener(new DropdownOnItemSelectedListener());
-//
-//        }
 
 
         /**
@@ -120,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         });
         Spinner dropdown = (Spinner) findViewById(R.id.spinner1);
 
+
         Button addProfile = findViewById(R.id.addProfile);
         addProfile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -169,13 +152,9 @@ public class MainActivity extends AppCompatActivity {
                 popup.setPositiveButton("Do it.", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-//                        profiles.remove(dropdown.getSelectedItemPosition());
-//                        RealmResults<Profile> profileRealm = Realm.getDefaultInstance().where(Profile.class).findAll();
                         Realm.getDefaultInstance().executeTransaction(new Realm.Transaction() {
                             @Override
                             public void execute(Realm Realm) {
-//                                profileRealm.deleteAllFromRealm();
-//                                Realm.delete(profiles.get(dropdown.getSelectedItemPosition()));
 //                                Realm.copyToRealm(profiles);
                                 profileRealm.deleteFromRealm(dropdown.getSelectedItemPosition());
                             }
@@ -198,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        /**
+        /*
          * creating the spinner and listener
          */
 
@@ -242,5 +221,4 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    final MediaPlayer player = new MediaPlayer.create(this, )
 }

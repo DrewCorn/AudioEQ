@@ -13,10 +13,11 @@ public class ProfileAdapter extends BaseAdapter {
 
     List<Profile> profiles;
     Context context;
+    int id;
 
     public ProfileAdapter(List<Profile> list, Context c) {
         this.profiles = list;
-        this.context =c;
+        this.context = c;
     }
 
     public void setData(List<Profile> profiles) {
